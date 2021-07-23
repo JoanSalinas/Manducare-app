@@ -13,7 +13,7 @@ export function HomeScreen() {
 	const addProductGoToProducts = async () => {
 		const newList = products.concat({ name, timeAverage });
 		let product = {'name':name, 'timeAverage': timeAverage}
-		setProducts(newList)
+		setProducts([...products, product])
 		goToProducts()
 		return
 		try{
@@ -31,7 +31,6 @@ export function HomeScreen() {
 			alert("Error del servidor")
 		}
 	};
-
 	const goToProducts = async () => {
 		setPantalla(1)
 	};
@@ -41,7 +40,7 @@ export function HomeScreen() {
 	};
 	const Item = ({ title }) => (
 		<View style={styles.item}>
-			<Text style={styles.titol}>{name}</Text>
+			<Text style={styles.titol}>{title}</Text>
 		</View>
 	);
 	const renderItem = ({ item }) => (
