@@ -1,13 +1,29 @@
 let Route = ""
-async function postOrder(name, avgTimeBuy) {
+async function postOrder(user_id, products) {
 	return fetchTimeout(Route+'/public/register',{
 		method: "post",
 		headers: {
 			"Content-Type": "application/json"
 		},
 		body: JSON.stringify({
-			name: name,
-			avgTimeBuy: avgTimeBuy,
+			user: user_id,
+			products: products,
+		})
+	}).then((response) => response)
+	.catch((error) => {
+		console.log('register', error);
+		return {error: error};
+	});
+}
+async function getRecomendations(user_id, products) {
+	return fetchTimeout(Route+'/public/register',{
+		method: "get",
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			user: user_id,
+			products: products,
 		})
 	}).then((response) => response)
 	.catch((error) => {
@@ -17,3 +33,4 @@ async function postOrder(name, avgTimeBuy) {
 }
 
 exports.postOrder = postOrder;
+exports.getRecomendations = getRecomendations;
