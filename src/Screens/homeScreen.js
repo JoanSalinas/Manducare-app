@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList, Image, ScrollView, Button,Dimensions,TouchableHighlight, TouchableOpacity   } from 'react-native';
 import { Input, CheckBox, Overlay, ListItem } from 'react-native-elements';
 import { postOrder } from '../api';
+import products from '../../resources/usefullProducts.json'
+
 const departments = ["frozen", "other", "bakery", "produce", "alcohol", "international", "beverages", "pets", "dry goods pasta", "bulk", "personal care", "meat seafood", "pantry", "breakfast", "canned goods", "dairy eggs", "household", "babies", "snacks", "deli", "missing"]
 
 const Item = ({ name, avg }) => (
@@ -12,15 +14,35 @@ const Item = ({ name, avg }) => (
 		</View>
 	</View>
 );
-
+const RecommendedItem = ({ name, rating }) => (
+	<View style={styles.item}>
+		<View style={{flexDirection:'row', justifyContent:'space-between',padding:15, alignItems:'center'}}>
+			<Text  style={styles.itemText}>- {name}</Text>
+			<Text style={styles.itemText}>{rating*10} %</Text>
+		</View>
+	</View>
+);
 export function HomeScreen() {
 
-	const [products, setProducts] = useState([{name:'patata', timeAverage: 5}]);
+	const [products, setProducts] = useState([]);
+	const [filteredProducts, setFilteredProducts] = useState([]);
+	const [recommendedProducts, setRecommendedProducts] = useState([{name:'patata', rating: 5}]);
 	const [pantalla, setPantalla] = useState(0)
 	const [name, setName] = useState();
 	const [user, setUser] = useState('"No identificat"');
 	const [timeAverage, setTimeAverage] = useState();
 
+	function findContentJS (items, searchTerm) {
+		var matches = items.filter(function (x) {
+			return x.includes(searchTerm);
+		});
+		setFilteredProducts(matches)
+		return matches;
+	}
+	//const findContentJS = (products, name) => products.filter(x => x.includes(name));
+	const handleSearch = (name) =>{
+		setName(name)
+	}
 	const postTicket = async () => {
 
 	}
@@ -57,6 +79,9 @@ export function HomeScreen() {
 	const renderItem = ({ item }) => (
 		<Item name={item.name} avg={item.timeAverage}/>
 	);
+	const renderRecommendedItem = ({ item }) => (
+		<RecommendedItem name={item.name} rating={item.rating}/>
+	);
 	return (
 		<View style={styles.container}>
 			<Text style = {styles.titol}>Manducare</Text>
@@ -65,29 +90,28 @@ export function HomeScreen() {
 						<Text style = {styles.subTitol}>Introdueix les dades del nou tiquet</Text>
 						<View style={styles.inputContainer}>
 							<StatusBar barStyle="light-content"/>
-							<Input 
-								label="Usuari" 
-								containerStyle={{marginTop:15}} 
-								style={styles.input} 
+							<Input
+								label="Usuari"
+								value={user}
+								style={styles.input}
 								placeholder="Escriu aqui el teu id o nom de usuari"
 								onChangeText={user => setUser(user)}
 							/>
-							<Input 
-								label="Nom del producte" 
-								containerStyle={{marginTop:15}} 
+							<Input
+								label="Nom del producte"
 								style={styles.input} 
 								placeholder="Escriu aqui el teu producte"
-								onChangeText={name => setName(name)}
+								onChangeText={name => handleSearch(name)}
 							/>
-							<Input 	
-								label="Cada quants dies compres aquest producte aproximadament?" 
+							<Input
+								label="Cada quants dies compres aquest producte aproximadament?"
 								keyboardType="numeric"
 								style={styles.input} 
 								placeholder="Escriu aqui un valor numeric"
 								onChangeText={timeAverage => setTimeAverage(timeAverage)}
 							/>
 						</View>
-						<View >  
+						<View>
 							<View style={styles.openButton}>
 								<Button color='tomato' title='Afegir i veure productes similars'  onPress={() => addProductGoToProducts()}/>
 							</View>
@@ -97,28 +121,30 @@ export function HomeScreen() {
 						</View>
 					</View>
 				):
-
 				(
 					<View>
-						<Text style = {styles.subTitol}>Introdueix les dades del nou tiquet per l'usuari: <br>{user}</br></Text>
+						<Text style = {styles.subTitol}>Introdueix les dades del nou tiquet</Text>
 						<View >
-							<FlatList 
+							<FlatList
 								data={products}
 								renderItem={renderItem}
-								keyExtractor = {item => item.id}
+								keyExtractor = {item => item.name}
 							/>
-							
+							<Text></Text>
 							<View style={styles.openButton}>
 								<Button color='tomato' title='Afegir un altre producte'  onPress={() => goToAddProducts()}/>
 							</View>
+							<FlatList
+								data={recommendedProducts}
+								renderItem={renderRecommendedItem}
+								keyExtractor = {item => item.name}
+							/>
 						</View>
 					</View>
 				)
 			}
 		</View>
 	);
-	
-	
 }
 
 
@@ -129,13 +155,13 @@ const styles = StyleSheet.create({
 		justifyContent: "center"
 	},
 	titol:{
-		alignSelf: 'center',    
+		alignSelf: 'center',
 		fontSize: 40,
 		fontFamily: 'sans-serif-light',
 		margin: 20
 	},
 	subTitol:{
-		alignSelf: 'center',    
+		alignSelf: 'center',
 		fontSize: 20,
 		fontFamily: 'sans-serif-light',
 		padding:5,
@@ -150,23 +176,22 @@ const styles = StyleSheet.create({
 		marginHorizontal: 15,
 		paddingRight:5,
 		borderRadius:30,
-		backgroundColor: 'lightblue',
+		backgroundColor: '#bef1becc',
 	},
 	itemText:{
-		color: '#fff',
+		color: '#000000',
 		fontSize: 18
 	},
 	inputContainer:{
 		justifyContent: 'space-between',
 		marginHorizontal:20,
-		paddingTop:20,
-		paddingBottom:20
+		paddingTop:15,
+		paddingBottom:15
 	},
 	openButton: {
 		margin:20,
 		padding:2,
 		backgroundColor: "tomato",
 		borderRadius: 10,
-		elevation: 2, 
 	}
 });
