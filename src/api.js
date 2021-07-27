@@ -1,4 +1,4 @@
-let Route = "http://127.0.0.1:5000/"
+let Route = "http://192.168.1.40:5000/"
 async function postOrder(user_id, products) {
 	return fetchTimeout(Route+'/public/register',{
 		method: "post",
@@ -16,7 +16,7 @@ async function postOrder(user_id, products) {
 	});
 }
 async function getRecomendations(user_id, products) {
-	return fetchTimeout(Route+'/recomendations',{
+	return fetchTimeout(Route+'recomendations',{
 		method: "get",
 		headers: {
 			"Content-Type": "application/json"
