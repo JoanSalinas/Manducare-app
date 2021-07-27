@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList, Image, ScrollView, Button,Dimensions,TouchableHighlight, TouchableOpacity   } from 'react-native';
 import { Input, CheckBox, Overlay, ListItem } from 'react-native-elements';
-import { postOrder } from '../api';
-import products from '../../resources/usefullProducts.json'
+import Autocomplete from 'react-native-autocomplete-input';
+import { postOrder, getRecomendations } from '../api';
+import allProductsFile from '../../resources/usefullProducts.json'
 
 const departments = ["frozen", "other", "bakery", "produce", "alcohol", "international", "beverages", "pets", "dry goods pasta", "bulk", "personal care", "meat seafood", "pantry", "breakfast", "canned goods", "dairy eggs", "household", "babies", "snacks", "deli", "missing"]
 
@@ -23,7 +24,26 @@ const RecommendedItem = ({ name, rating }) => (
 	</View>
 );
 export function HomeScreen() {
+	//
+	const [allProducts, setAllProducts] = useState([allProductsFile]);
+	const [selectedValue, setSelectedValue] = useState({});
+	const [queryInput, setQueryInput] = useState('');
+	const findFilm = (query) => {
+		// Method called every time when we change the value of the input
+		if (query) {
+			// Making a case insensitive regular expression
+			const regex = new RegExp(`${query.trim()}`, 'i');
+			// Setting the filtered film array according the query
+			setFilteredProducts(
+			    films.filter((film) => film.product_name.search(regex) >= 0)
+			);
+		} else {
+			// If the query is null then return blank
+			setFilteredProducts([]);
+		}
+	};
 
+		//
 	const [products, setProducts] = useState([]);
 	const [filteredProducts, setFilteredProducts] = useState([]);
 	const [recommendedProducts, setRecommendedProducts] = useState([{name:'patata', rating: 5}]);
@@ -32,17 +52,24 @@ export function HomeScreen() {
 	const [user, setUser] = useState('"No identificat"');
 	const [timeAverage, setTimeAverage] = useState();
 
-	function findContentJS (items, searchTerm) {
-		var matches = items.filter(function (x) {
-			return x.includes(searchTerm);
-		});
-		setFilteredProducts(matches)
-		return matches;
+//
+	const handleSearch = (name) => {
+		setQueryInput(name)
+		if(name.length > 3){
+			//let value = event.target.value.toLowerCase();
+			let value = name.toLowerCase();
+			let result = [];
+			console.log(value);
+			result = allProductsFile.filter((data) => {
+				return data.product_name.toLowerCase().search(value) != -1;
+			});
+			console.log(result)
+			setFilteredProducts(result);
+		}
+		return
 	}
-	//const findContentJS = (products, name) => products.filter(x => x.includes(name));
-	const handleSearch = (name) =>{
-		setName(name)
-	}
+//
+
 	const postTicket = async () => {
 
 	}
@@ -50,16 +77,14 @@ export function HomeScreen() {
 	const addProductGoToProducts = async () => {
 		let product = { name, timeAverage}
 		setProducts([...products, product])
-		goToProducts()
-		return
+		console.log(products)
 		try{
-
-			let response = await postOrder("producte", "avg")
+			let response = await getRecomendations(user, products)
 			if (response && response.error){
 				alert("Error del servidor")
 			}
 			else{
-				setProducts([...products, product])
+				console.log(response)
 				goToProducts()
 			};
 		}
@@ -97,16 +122,19 @@ export function HomeScreen() {
 								placeholder="Escriu aqui el teu id o nom de usuari"
 								onChangeText={user => setUser(user)}
 							/>
+							
 							<Input
 								label="Nom del producte"
-								style={styles.input} 
+								style={styles.input}
+								value={name}
 								placeholder="Escriu aqui el teu producte"
-								onChangeText={name => handleSearch(name)}
+								onChangeText={name => setName(name)}
 							/>
 							<Input
 								label="Cada quants dies compres aquest producte aproximadament?"
 								keyboardType="numeric"
 								style={styles.input} 
+								value={timeAverage}
 								placeholder="Escriu aqui un valor numeric"
 								onChangeText={timeAverage => setTimeAverage(timeAverage)}
 							/>
@@ -123,7 +151,7 @@ export function HomeScreen() {
 				):
 				(
 					<View>
-						<Text style = {styles.subTitol}>Introdueix les dades del nou tiquet</Text>
+						<Text style = {styles.subTitol}>Dades del nou tiquet</Text>
 						<View >
 							<FlatList
 								data={products}
@@ -179,11 +207,11 @@ const styles = StyleSheet.create({
 		backgroundColor: '#bef1becc',
 	},
 	itemText:{
-		color: '#000000',
-		fontSize: 18
+		fontSize: 15,
+    	margin: 2,
 	},
 	inputContainer:{
-		justifyContent: 'space-between',
+		//justifyContent: 'space-between',
 		marginHorizontal:20,
 		paddingTop:15,
 		paddingBottom:15
@@ -193,5 +221,32 @@ const styles = StyleSheet.create({
 		padding:2,
 		backgroundColor: "tomato",
 		borderRadius: 10,
-	}
+	},
+	container1: {
+		position: 'relative',
+		backgroundColor: '#F5FCFF',
+		flex: 1,
+
+		// Android requiers padding to avoid overlapping
+		// with content and autocomplete
+		paddingTop: 50,
+
+		marginTop: 25,
+
+	},
+	itemText: {
+	  fontSize: 15,
+	  margin: 2,
+	},
+	autocompleteContainer: {
+	  // Hack required to make the autocomplete
+	  // work on Andrdoid
+	  flex: 1,
+	  left: 0,
+	  position: 'absolute',
+	  right: 0,
+	  top: 0,
+	  zIndex:1,
+	  padding: 5,
+	},
 });
