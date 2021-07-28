@@ -7,19 +7,18 @@ import allProductsFile from '../../resources/usefullProducts.json'
 
 const departments = ["frozen", "other", "bakery", "produce", "alcohol", "international", "beverages", "pets", "dry goods pasta", "bulk", "personal care", "meat seafood", "pantry", "breakfast", "canned goods", "dairy eggs", "household", "babies", "snacks", "deli", "missing"]
 
-const Item = ({ name, avg }) => (
+const Item = ({ name, value }) => (
 	<View style={styles.item}>
-		<View style={{flexDirection:'row', justifyContent:'space-between',padding:15, alignItems:'center'}}>
+		<View style={{flexDirection:'row', justifyContent:'space-between',padding:5}}>
 			<Text  style={styles.itemText}>- {name}</Text>
-			<Text style={styles.itemText}>cada {avg} dies</Text>
+			<Text style={styles.itemText}> {value}</Text>
 		</View>
 	</View>
 );
 const RecommendedItem = ({ name, rating }) => (
 	<View style={styles.item}>
-		<View style={{flexDirection:'row', justifyContent:'space-between',padding:15, alignItems:'center'}}>
+		<View style={{ padding:5}}>
 			<Text  style={styles.itemText}>- {name}</Text>
-			<Text style={styles.itemText}>{rating*10} %</Text>
 		</View>
 	</View>
 );
@@ -50,7 +49,8 @@ export function HomeScreen() {
 	const [pantalla, setPantalla] = useState(0)
 	const [name, setName] = useState();
 	const [user, setUser] = useState('"No identificat"');
-	const [timeAverage, setTimeAverage] = useState();
+	const [puntuacio, setPuntuacio] = useState();
+	const [productsResponse, setProductsResponse] =  useState([]);
 
 //
 	const handleSearch = (name) => {
@@ -73,24 +73,49 @@ export function HomeScreen() {
 	const postTicket = async () => {
 
 	}
-
-	const addProductGoToProducts = async () => {
-		let product = { name, timeAverage}
-		setProducts([...products, product])
-		console.log(products)
+	
+	const recommendProducts = async () => {
 		try{
 			let response = await getRecomendations(user, products)
 			if (response && response.error){
 				alert("Error del servidor")
 			}
 			else{
-				console.log(response)
-				goToProducts()
-			};
+				console.log(response,'---',response[0])
+				response = Object.values(response);
+				let auxProducts = []
+				for (var i = 0; i < response.length; i++) {
+					console.log(response[i])
+					auxProducts.push(response[i])
+				}
+				setProductsResponse(auxProducts)
+			}
 		}
 		catch(e){
 			alert("Error del servidor")
 		}
+	}
+	const addProductGoToProducts = async () => {
+		
+		let found = false
+		found = allProductsFile.filter((data) => { 
+			return data.product_name.toLowerCase() == name.toLowerCase()
+		});
+		console.log(name, found)
+		if(!found[0].product_id){
+			alert("Producte no trobat")
+			return
+		} 
+		id = found[0].product_id
+		let value = puntuacio
+		let product = { name, value, id}
+		await setProducts([...products, product])
+		alert("Producte afegit")
+		/*let response = await getRecomendations(user, products)
+		console.log(response)
+		goToProducts()
+		return*/
+		
 	};
 
 	const goToProducts = async () => {
@@ -102,16 +127,17 @@ export function HomeScreen() {
 	};
 	
 	const renderItem = ({ item }) => (
-		<Item name={item.name} avg={item.timeAverage}/>
+		<Item name={item.name} value={item.value}/>
 	);
 	const renderRecommendedItem = ({ item }) => (
-		<RecommendedItem name={item.name} rating={item.rating}/>
+		<RecommendedItem name={item.product_name}/>
 	);
 	return (
 		<View style={styles.container}>
-			<Text style = {styles.titol}>Manducare</Text>
+			
 			{pantalla == 0 ? (
 					<View>
+						<Text style = {styles.titol}>Manducare</Text>
 						<Text style = {styles.subTitol}>Introdueix les dades del nou tiquet</Text>
 						<View style={styles.inputContainer}>
 							<StatusBar barStyle="light-content"/>
@@ -131,17 +157,17 @@ export function HomeScreen() {
 								onChangeText={name => setName(name)}
 							/>
 							<Input
-								label="Cada quants dies compres aquest producte aproximadament?"
+								label="Puntua aquest aliment"
 								keyboardType="numeric"
 								style={styles.input} 
-								value={timeAverage}
+								value={puntuacio}
 								placeholder="Escriu aqui un valor numeric"
-								onChangeText={timeAverage => setTimeAverage(timeAverage)}
+								onChangeText={puntuacio => setPuntuacio(puntuacio)}
 							/>
 						</View>
 						<View>
 							<View style={styles.openButton}>
-								<Button color='tomato' title='Afegir i veure productes similars'  onPress={() => addProductGoToProducts()}/>
+								<Button color='tomato' title='Afegir producte'  onPress={() => addProductGoToProducts()}/>
 							</View>
 							<View style={styles.openButton}>
 								<Button color='tomato' title='Veure productes similars'  onPress={() => goToProducts()}/>
@@ -162,11 +188,20 @@ export function HomeScreen() {
 							<View style={styles.openButton}>
 								<Button color='tomato' title='Afegir un altre producte'  onPress={() => goToAddProducts()}/>
 							</View>
-							<FlatList
-								data={recommendedProducts}
-								renderItem={renderRecommendedItem}
-								keyExtractor = {item => item.name}
-							/>
+							<View style={styles.openButton}>
+								<Button color='tomato' title='Veure recomenacions'  onPress={() => recommendProducts()}/>
+							</View>
+							<Text style = {styles.subTitol}>Produces recomenats</Text>
+							<View>
+								<FlatList
+									data={productsResponse}
+									renderItem={renderRecommendedItem}
+									keyExtractor = {item => item.product_id}
+									contentContainerStyle={{
+    flexGrow: 1,
+    }}
+								/>
+							</View>
 						</View>
 					</View>
 				)
@@ -199,7 +234,6 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 	},
 	item: {
-		flex: 1,
 		margin: 3,
 		marginHorizontal: 15,
 		paddingRight:5,
@@ -217,7 +251,7 @@ const styles = StyleSheet.create({
 		paddingBottom:15
 	},
 	openButton: {
-		margin:20,
+		margin:10,
 		padding:2,
 		backgroundColor: "tomato",
 		borderRadius: 10,
